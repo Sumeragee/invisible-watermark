@@ -2,7 +2,7 @@ import cv2
 from imwatermark import WatermarkDecoder
 
 # === Settings ===
-input_file = 'watermarked_image.jpg'
+input_file = 'watermarked_image.png'
 algorithm = 'dwtDct'
 max_wm_length = 32  # Adjust based on how long your watermark is
 

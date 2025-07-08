@@ -4,7 +4,7 @@ from imwatermark import WatermarkEncoder
 from imwatermark.rivaGan import RivaWatermark  # Needed for manual model load
 
 input_file = 'kafka run back.jpg'
-output_file = 'watermarked_image.jpg'
+output_file = 'watermarked_image.png'
 watermark_text = 'SH13'  # Must be exactly 4 characters for rivaGan
 algorithm = 'rivaGan'    # Or switch to 'dwtDct' for longer text
 
