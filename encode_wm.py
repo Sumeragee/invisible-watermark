@@ -41,9 +41,26 @@ if bgr_encoded.dtype != np.uint8:
     bgr_encoded = np.nan_to_num(bgr_encoded, nan=0.0, posinf=1.0, neginf=0.0)
     bgr_encoded = (bgr_encoded * 255.0).clip(0, 255).astype(np.uint8)
 
+# === Display the image to verify it's valid ===
+print("[ℹ️] Previewing image (press any key to continue)...")
+cv2.imshow("Preview: Watermarked Image", bgr_encoded)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# === Self-test: Try saving a dummy image ===
+print("[ℹ️] Testing if OpenCV can save at all...")
+dummy_test_path = "test_save_dummy.png"
+dummy_image = np.full_like(bgr_encoded, 127)  # solid gray image
+dummy_saved = cv2.imwrite(dummy_test_path, dummy_image)
+if dummy_saved:
+    print(f"[✔] Dummy image saved successfully to {dummy_test_path}")
+else:
+    raise IOError("[✘] OpenCV failed to save even a basic dummy image. Check path, OneDrive, or permissions.")
+
+# === Try saving the encoded output ===
 print("[ℹ️] Saving output image...")
 success = cv2.imwrite(output_file, bgr_encoded)
 if not success:
-    raise IOError(f"[✘] Failed to save image to '{output_file}'")
+    raise IOError(f"[✘] Failed to save image to '{output_file}' — despite dummy image saving correctly.")
 
 print(f"[✔] Watermark embedded using '{algorithm}' | Input: '{input_file}' → Output: '{output_file}'")
