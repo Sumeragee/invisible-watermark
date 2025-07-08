@@ -4,7 +4,7 @@ from imwatermark import WatermarkEncoder
 
 input_file = 'kafka run back.jpg'
 output_file = 'watermarked_image.jpg'
-watermark_text = 'goldshi'
+watermark_text = 'SH13'
 algorithm = 'rivaGan'  # or 'dwtDct'
 
 # Check if input exists
