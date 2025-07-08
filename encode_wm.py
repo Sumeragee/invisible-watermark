@@ -1,3 +1,5 @@
+# === Encoder/Embedder of INV WM to IMG ===
+# === Notes to remember, Put the image file to this folder (invisible-watermark) for it to be detected wont work if not inside folder
 import os
 import cv2
 import numpy as np
@@ -5,15 +7,15 @@ from imwatermark import WatermarkEncoder
 from imwatermark.rivaGan import RivaWatermark
 
 # === Input image ===
-input_file = 'fufu_wm.png'
-watermark_text = 'JUFS'  # Must be exactly 4 chars for rivaGan
+input_file = 'fufu_wm.png' # <-- Input Filename here to be embedded with INV WM
+watermark_text = 'JUFS'  # Must be exactly 4 chars for rivaGan/ 32 bit lang rivaGan
 algorithm = 'rivaGan'
 
-# === Output directory on Drive D ===
+# === Output directory on Drive D === will not work if within one drive folder must be outside One Drive
 output_dir = 'D:/WatermarkTests'
 os.makedirs(output_dir, exist_ok=True)
 
-# === Create output filename using Option 1: originalname_wm.ext ===
+# === Output of filename after being embedded with wm ===
 base_name = os.path.basename(input_file)                      
 name_no_ext, ext = os.path.splitext(base_name)               
 output_file = os.path.join(output_dir, f"{name_no_ext}_wm{ext}")
@@ -75,4 +77,4 @@ success = cv2.imwrite(output_file, bgr_encoded)
 if not success:
     raise IOError(f"[✘] Failed to save image to '{output_file}' — despite dummy image saving correctly.")
 
-print(f"[✔] Watermark embedded using '{algorithm}' | Input: '{input_file}' → Output: '{output_file}'")
+print(f"[✔] Watermark embedded using '{algorithm}' | Input: '{input_file}' → Output: '{output_file}'") 

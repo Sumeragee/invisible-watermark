@@ -1,3 +1,5 @@
+# === Decoder That Decodes Most Recent In Directory ===
+
 import os
 import cv2
 from imwatermark import WatermarkDecoder
