@@ -1,5 +1,6 @@
 import os
 import cv2
+import numpy as np
 from imwatermark import WatermarkEncoder
 from imwatermark.rivaGan import RivaWatermark  # Needed for manual model load
 
@@ -34,6 +35,16 @@ bgr_encoded = encoder.encode(bgr, algorithm)
 
 if bgr_encoded is None:
     raise RuntimeError(f"[✘] Failed to encode watermark using algorithm '{algorithm}'")
+
+# === Debug: Check encoded image properties ===
+print(f"[🧪] Encoded image shape: {bgr_encoded.shape}")
+print(f"[🧪] Encoded image dtype: {bgr_encoded.dtype}")
+print(f"[🧪] Pixel value range: min={np.min(bgr_encoded)}, max={np.max(bgr_encoded)}")
+
+# === Convert to uint8 if dtype is not valid for saving ===
+if bgr_encoded.dtype != np.uint8:
+    print("[ℹ️] Converting image to uint8 for saving...")
+    bgr_encoded = (bgr_encoded * 255.0).clip(0, 255).astype(np.uint8)
 
 # === Save the result ===
 success = cv2.imwrite(output_file, bgr_encoded)
