@@ -5,8 +5,8 @@ from imwatermark import WatermarkEncoder
 from imwatermark.rivaGan import RivaWatermark
 
 # === Input image ===
-input_file = 'fufu.png'
-watermark_text = 'JUFY'  # Must be exactly 4 chars for rivaGan
+input_file = 'fufu_wm.png'
+watermark_text = 'JUFS'  # Must be exactly 4 chars for rivaGan
 algorithm = 'rivaGan'
 
 # === Output directory on Drive D ===
