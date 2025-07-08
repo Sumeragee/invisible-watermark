@@ -4,11 +4,19 @@ import numpy as np
 from imwatermark import WatermarkEncoder
 from imwatermark.rivaGan import RivaWatermark
 
+# === Input image ===
 input_file = 'kafka run back.jpg'
-output_file = 'watermarked_image.png'
 watermark_text = 'SH13'  # Must be exactly 4 chars for rivaGan
 algorithm = 'rivaGan'
 
+# === Output directory on Drive D ===
+output_dir = 'D:/WatermarkTests'
+os.makedirs(output_dir, exist_ok=True)
+
+output_file = os.path.join(output_dir, 'watermarked_image.png')
+dummy_test_path = os.path.join(output_dir, 'test_save_dummy.png')
+
+# === Input checks ===
 if not os.path.exists(input_file):
     raise FileNotFoundError(f"[✘] Input image not found: {input_file}")
 
@@ -16,6 +24,7 @@ bgr = cv2.imread(input_file)
 if bgr is None:
     raise ValueError(f"[✘] Failed to load image: {input_file}")
 
+# === Initialize encoder ===
 print("[ℹ️] Initializing encoder...")
 encoder = WatermarkEncoder()
 encoder.set_watermark('bytes', watermark_text.encode('utf-8'))
@@ -25,6 +34,7 @@ if algorithm == 'rivaGan':
     encoder._wm_encoder = RivaWatermark(encoder._watermarks, encoder._wmLen)
     encoder._wm_encoder.loadModel()
 
+# === Encode ===
 print("[ℹ️] Encoding in progress...")
 bgr_encoded = encoder.encode(bgr, algorithm)
 
@@ -35,29 +45,28 @@ print(f"[🧪] Encoded shape: {bgr_encoded.shape}")
 print(f"[🧪] Dtype: {bgr_encoded.dtype}")
 print(f"[🧪] Pixel range: {np.min(bgr_encoded)} to {np.max(bgr_encoded)}")
 
-# Fix float output
+# === Fix float output ===
 if bgr_encoded.dtype != np.uint8:
     print("[ℹ️] Cleaning and converting image to uint8...")
     bgr_encoded = np.nan_to_num(bgr_encoded, nan=0.0, posinf=1.0, neginf=0.0)
     bgr_encoded = (bgr_encoded * 255.0).clip(0, 255).astype(np.uint8)
 
-# === Display the image to verify it's valid ===
+# === Preview image ===
 print("[ℹ️] Previewing image (press any key to continue)...")
 cv2.imshow("Preview: Watermarked Image", bgr_encoded)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
-# === Self-test: Try saving a dummy image ===
+# === Dummy test image ===
 print("[ℹ️] Testing if OpenCV can save at all...")
-dummy_test_path = "test_save_dummy.png"
 dummy_image = np.full_like(bgr_encoded, 127)  # solid gray image
 dummy_saved = cv2.imwrite(dummy_test_path, dummy_image)
 if dummy_saved:
     print(f"[✔] Dummy image saved successfully to {dummy_test_path}")
 else:
-    raise IOError("[✘] OpenCV failed to save even a basic dummy image. Check path, OneDrive, or permissions.")
+    raise IOError("[✘] OpenCV failed to save even a basic dummy image. Check path or permissions.")
 
-# === Try saving the encoded output ===
+# === Final save ===
 print("[ℹ️] Saving output image...")
 success = cv2.imwrite(output_file, bgr_encoded)
 if not success:
