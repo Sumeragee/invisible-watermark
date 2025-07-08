@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import cv2
-from rivagan import RivaGAN
+from imwatermark.rivaGan import RivaWatermark 
 
 torch.nn.Module.dump_patches = True
 
