@@ -5,15 +5,18 @@ from imwatermark import WatermarkEncoder
 from imwatermark.rivaGan import RivaWatermark
 
 # === Input image ===
-input_file = 'kafka run back.jpg'
-watermark_text = 'SH13'  # Must be exactly 4 chars for rivaGan
+input_file = 'fufu.png'
+watermark_text = 'JUFY'  # Must be exactly 4 chars for rivaGan
 algorithm = 'rivaGan'
 
 # === Output directory on Drive D ===
 output_dir = 'D:/WatermarkTests'
 os.makedirs(output_dir, exist_ok=True)
 
-output_file = os.path.join(output_dir, 'watermarked_image.png')
+# === Create output filename using Option 1: originalname_wm.ext ===
+base_name = os.path.basename(input_file)                      
+name_no_ext, ext = os.path.splitext(base_name)               
+output_file = os.path.join(output_dir, f"{name_no_ext}_wm{ext}")
 dummy_test_path = os.path.join(output_dir, 'test_save_dummy.png')
 
 # === Input checks ===
