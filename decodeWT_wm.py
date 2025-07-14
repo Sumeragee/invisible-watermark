@@ -1,62 +1,54 @@
-# === DWT-DCT Decoder for up to 10-character invisible watermark ===
 import os
 import cv2
 import numpy as np
 import pywt
 
-# === Settings ===
-input_dir = 'D:/WatermarkTests_DWTDCT'
-input_file = os.path.join(input_dir, 'agnes_dwt_dct_wm.jpg')
-max_watermark_length = 10  # 10 characters = 80 bits
+# === SETTINGS ===
+input_file = 'D:/WatermarkTests_DWTDCT_QIM/flow_qim_dwt_dct_wm.png'
+max_chars = 10
+Q = 10               # Quantization divisor (must match encoder)
+redundancy = 5       # Repetition count (must match encoder)
 
-# === Binary to text conversion ===
+# === UTILS ===
 def bits_to_text(bits):
-    chars = [chr(int(bits[i:i+8], 2)) for i in range(0, len(bits), 8)]
-    return ''.join(chars)
+    return ''.join(chr(int(bits[i:i+8], 2)) for i in range(0, len(bits), 8)).rstrip('\x00')
 
-# === Extract watermark from image ===
-def extract_watermark_dwt_dct(img, max_chars=10):
-    bit_len = max_chars * 8  # e.g. 10 chars = 80 bits
+# === DECODER ===
+def extract_watermark_qim(img, max_chars=10, Q=10, redundancy=5):
+    total_bits = max_chars * 8
+    b, g, r = cv2.split(img)
+    b = np.float32(b)
 
-    # Convert to grayscale
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray = np.float32(gray)
-
-    # Apply 2D DWT
-    coeffs = pywt.dwt2(gray, 'haar')
+    coeffs = pywt.dwt2(b, 'haar')
     LL, (LH, HL, HH) = coeffs
-
-    # Apply DCT to LL
     dct_LL = cv2.dct(LL)
-
-    # Extract LSBs from DCT coefficients
     flat = dct_LL.flatten()
+
     bits = ''
-    for i in range(bit_len):
-        if i < len(flat):
-            bits += str(int(flat[i]) % 2)
-        else:
-            break
+    idx = 0
+    for bit_num in range(total_bits):
+        bit_votes = []
+        for _ in range(redundancy):
+            if idx >= len(flat):
+                break
+            val = flat[idx]
+            mod = int(round(val)) % Q
+            vote = 1 if mod == 1 else 0
+            bit_votes.append(vote)
+            idx += 1
+
+        # Majority voting
+        if bit_votes:
+            bit = str(int(sum(bit_votes) >= (len(bit_votes) // 2 + 1)))
+            bits += bit
 
     return bits_to_text(bits)
 
-# === Load image ===
-if not os.path.exists(input_file):
-    raise FileNotFoundError(f"[✘] Watermarked image not found: {input_file}")
+# === EXECUTE ===
+img = cv2.imread(input_file)
+if img is None:
+    raise FileNotFoundError("Watermarked image not found.")
 
-bgr = cv2.imread(input_file)
-if bgr is None:
-    raise ValueError(f"[✘] Failed to load image: {input_file}")
-
-# === Decode ===
-print("[ℹ️] Decoding watermark from DWT-DCT image...")
-try:
-    decoded_text = extract_watermark_dwt_dct(bgr, max_chars=max_watermark_length)
-
-    if not decoded_text.strip() or all(c == '\x00' for c in decoded_text):
-        print(f"[ℹ️] No watermark detected in '{input_file}'.")
-    else:
-        print(f"[✔] Decoded watermark (max 10 chars): '{decoded_text.strip()}'")
-
-except Exception as e:
-    print(f"[✘] Failed to decode watermark — possibly no watermark present or format is wrong.\nDetails: {e}")
+print("[ℹ️] Decoding watermark using QIM with voting...")
+wm_text = extract_watermark_qim(img, max_chars=max_chars, Q=Q, redundancy=redundancy)
+print(f"[✔] Decoded watermark: '{wm_text}'")

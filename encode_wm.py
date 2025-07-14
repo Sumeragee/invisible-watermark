@@ -7,8 +7,8 @@ from imwatermark import WatermarkEncoder
 from imwatermark.rivaGan import RivaWatermark
 
 # === Input image ===
-input_file = 'flow.jpg' # <-- Input Filename here to be embedded with INV WM
-watermark_text = 'TEST'  # Must be exactly 4 chars for rivaGan/ 32 bit lang rivaGan
+input_file = 'tester.webp' # <-- Input Filename here to be embedded with INV WM
+watermark_text = 'FAIL'  # Must be exactly 4 chars for rivaGan/ 32 bit lang rivaGan
 algorithm = 'rivaGan'
 
 # === Output directory on Drive D === will not work if within one drive folder must be outside One Drive

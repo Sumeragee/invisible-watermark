@@ -6,7 +6,7 @@ from imwatermark.rivaGan import RivaWatermark  # Needed to load model manually
 
 # === Settings ===
 input_dir = 'D:/WatermarkTests'
-input_file = os.path.join(input_dir, 'flow_wm.jpg')
+input_file = os.path.join(input_dir, 'tester_wm.webp')
 algorithm = 'rivaGan'         # Match your encoding algorithm
 max_wm_length = 32            # SH13 = 4 characters
 

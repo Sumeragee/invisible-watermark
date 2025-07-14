@@ -1,73 +1,61 @@
-# === DWT-DCT Watermark Encoder (color-safe, max 10 characters) ===
 import os
 import cv2
 import numpy as np
 import pywt
 
-# === Input Settings ===
-input_file = 'flow.jpg'
-watermark_text = 'TenCharacs'  # Must be exactly 10 characters
-output_dir = 'D:/WatermarkTests_DWTDCT'
+# === SETTINGS ===
+input_file = 'flow.png'
+watermark_text = 'TenCharacs'  # Exactly 10 characters = 80 bits
+output_dir = 'D:/WatermarkTests_DWTDCT_QIM'
 os.makedirs(output_dir, exist_ok=True)
 
-base_name = os.path.basename(input_file)
-name_no_ext, ext = os.path.splitext(base_name)
-output_file = os.path.join(output_dir, f"{name_no_ext}_dwt_dct_wm{ext}")
+output_file = os.path.join(output_dir, 'flow_qim_dwt_dct_wm.png')  # JPEG-safe output
 
-# === Convert watermark to binary ===
-def text_to_bits(text):
+# === UTILS ===
+def text_to_bits(text, max_chars=10):
+    text = text.ljust(max_chars, '\x00')[:max_chars]
     return ''.join(format(ord(c), '08b') for c in text)
 
-# === Embed into Blue channel only ===
-def embed_watermark_dwt_dct_color(img, watermark_text, max_chars=10):
-    # Enforce exactly max_chars
-    if len(watermark_text) < max_chars:
-        watermark_text = watermark_text.ljust(max_chars, '\x00')
-    elif len(watermark_text) > max_chars:
-        watermark_text = watermark_text[:max_chars]
-
-    watermark_bits = text_to_bits(watermark_text)
-
-    # Split color channels
+# === ENCODER ===
+def embed_watermark_qim(img, watermark_text, max_chars=10, Q=10, redundancy=5):
+    bits = text_to_bits(watermark_text, max_chars)
     b, g, r = cv2.split(img)
     b = np.float32(b)
 
-    # DWT → DCT on Blue channel
+    # DWT on Blue
     coeffs = pywt.dwt2(b, 'haar')
     LL, (LH, HL, HH) = coeffs
     dct_LL = cv2.dct(LL)
-
-    # Embed bits using LSB substitution
     flat = dct_LL.flatten()
-    for i in range(min(len(watermark_bits), len(flat))):
-        flat[i] = flat[i] - (flat[i] % 2) + int(watermark_bits[i])
+
+    print(f"[ℹ️] Embedding {len(bits)} bits with redundancy={redundancy}, Q={Q}")
+    idx = 0
+    for bit in bits:
+        for _ in range(redundancy):
+            if idx >= len(flat):
+                print("[⚠️] Ran out of DCT coefficients!")
+                break
+            val = flat[idx]
+            mod = int(val) % Q
+            delta = (1 - mod) if bit == '1' else (-mod)
+            flat[idx] += delta
+            idx += 1
+
     dct_LL_mod = flat.reshape(dct_LL.shape)
-
-    # Rebuild Blue channel
     LL_mod = cv2.idct(dct_LL_mod)
-    watermarked_b = pywt.idwt2((LL_mod, (LH, HL, HH)), 'haar')
-    watermarked_b = np.clip(watermarked_b, 0, 255).astype(np.uint8)
+    b_mod = pywt.idwt2((LL_mod, (LH, HL, HH)), 'haar')
+    b_mod = np.clip(b_mod, 0, 255)
+    b_mod = cv2.resize(b_mod, (g.shape[1], g.shape[0]))
 
-    # Merge with untouched G and R channels
-    final = cv2.merge([watermarked_b, g, r])
+    final = cv2.merge([b_mod.astype(np.uint8), g, r])
     return final
 
-# === Load and process ===
-print("[ℹ️] Loading input image...")
+# === EXECUTE ===
 img = cv2.imread(input_file)
 if img is None:
-    raise FileNotFoundError(f"Image not found: {input_file}")
+    raise FileNotFoundError("Input image not found.")
 
-print("[ℹ️] Embedding watermark...")
-watermarked_img = embed_watermark_dwt_dct_color(img, watermark_text)
+wm_img = embed_watermark_qim(img, watermark_text)
 
-# === Preview result ===
-cv2.imshow("Watermarked Image", watermarked_img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-# === Save result ===
-if cv2.imwrite(output_file, watermarked_img):
-    print(f"[✔] Watermarked image saved to: {output_file}")
-else:
-    print("[✘] Failed to save output image.")
+cv2.imwrite(output_file, wm_img, [cv2.IMWRITE_JPEG_QUALITY, 75])
+print(f"[✔] Watermarked image saved to: {output_file}")
